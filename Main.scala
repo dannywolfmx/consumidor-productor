@@ -4,26 +4,6 @@ import scala.collection.mutable.ArrayBuffer
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.duration.Duration
 
-
-class Semaforo{
-    var disponible = true
-    def tomar = synchronized{
-        //Esperar a que no este disponible
-        while ( !disponible ) wait() 
-        //cambiamos el estado de disponible
-        disponible = false
-    }
-
-    def soltar = synchronized {
-        disponible = true
-        notify()
-    }
-}
-
-
-
-
-
 object Main extends App{
       
     //Creamos un alias del tipo Any para que sea mas facil de leer
