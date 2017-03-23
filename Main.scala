@@ -1,5 +1,9 @@
 import scala.concurrent
+import scala.concurrent.{Await, Future, Promise}
 import scala.collection.mutable.ArrayBuffer
+import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.duration.Duration
+
 
 class Semaforo{
     var disponible = true
@@ -16,94 +20,57 @@ class Semaforo{
     }
 }
 
-class Contenedor(maxProductos:Int,contenedor){
-
-}
-
-object Contenedor(maxProductos:Int){
-    private var lista       = ArrayBuffer[Any]();
-
-    def colocar(producto:Any) : Boolean = {
-        //Si el valor de posicion es igual al maximo del contenedor
-        //reseteamos el contador de posicionActual a 0
-        if (estaLleno) {
-            Console.out.error ("Contenedor Lleno");
-            return false;
-        }else{
-            //Insertamos al ultimo
-            lista += producto;
-            return true;
-        }
-
-    }
-
-    def tomar(producto:Any) : Boolean = {
-
-        //Si el valor de posicion es igual al maximo del contenedor
-        //reseteamos el contador de posicionActual a 0
-        if (estaVacio) {
-            Console.out.error ("Contenedor Vacio");
-            return false;
-        }else{
-            //Removemos el primer elemento
-            lista.remove(0)
-            return true;
-        }
-
-    }
-
-    def estaLleno(): Boolean = {
-        this.tam >= maxProductos ; 
-    }
-
-    def estaVacio():Boolean = {
-        this.tam == 0 ;
-    }
-
-    def tam() : Int {
-        lista.size
-    }
-
-}
-
-case class Consumidor(){
-    private val maxRandom:Int = 100; 
 
 
-    def tomar(contenedor:Contenedor):Boolean = {
-        if(contenedor.estaVacio){
-            Console.out.erro("Contenedor Vacio");
-            return false;
-        }else{
-            val producto = contenedor.tomar;
-            imprime("tome el producto" + producto);
-        }
-    }
 
-    def dormir(): Unit = {
-        val numeroAleatorio = scala.util.Random.nextInt(1000);
-        Thread.sleep ( numeroAleatorio );
-    }
-
-    def imprime(val texto:String): Unit = {
-        println (s "El consumidor: ${texto}" );
-    }
-};
-
-case class Productor    (productos:Contenedor);
 
 object Main extends App{
+      
+    //Creamos un alias del tipo Any para que sea mas facil de leer
+    type Producto = Any;
+    
     //Maximo de productos que el contenedor prodra tener.
     val maxProductos    = 30;
+    
+    //Singleton del contenedor 
+    Contenedor.tam = maxProductos;
+    val contenedor = Contenedor.instancia
+    
+    println(s"contenedor max ${contenedor.tamMax}")
+    
+    //Existe solo 1 consumidor y solo un productor
+    val consumidor      = Consumidor;
+    val productor       = Productor ;
+    
+    
+    
+    var bufferDeProductos = ArrayBuffer[Producto]();
+    
     //Verificamos que maxProductos sea un rango valido
-    if(maxProductos >= 0 ){
-        Console.err.println(s"El contenedor fue asignado con espacio de ${maxProductos}");
+    if(maxProductos <= 0 ){
+        Console.err.println( s"El contenedor fue asignado con espacio de ${maxProductos}" );
         sys.exit(1);
     }
-
-    val contenedor      = Contenedor(maxProductos);
-
-    //Existe solo 1 consumidor y solo un productor
-    val consumidor      = Consumidor(contenedor);
-    val productor       = Productor (contenedor);
+    
+    println(s"Ok dame los ${contenedor.tamMax} productos (Separados por enter)");
+    
+    for(i <- 0 until maxProductos){
+      bufferDeProductos += scala.io.StdIn.readLine( s"Producto ${i}: " );
+    }
+    
+    println(s"Estos son los productos que insertaste \n ${bufferDeProductos}");    
+    
+    val productores = Future{
+    	for(a <- bufferDeProductos){
+    		productor.colocar(contenedor,bufferDeProductos.remove(0));  
+    	}
+    }
+    
+    val consumidores = Future{      
+    	for(a <- 0 until maxProductos){	consumidor.tomar(contenedor);	}
+    }
+    
+    Await.ready(productores,Duration.Inf);
+    Await.ready(consumidores,Duration.Inf);
+    
 }
