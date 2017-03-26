@@ -1,3 +1,5 @@
+package main.scala
+
 abstract class Persona protected( nombrePersona:String = "Persona",
                                    colorTexto:String = "\u001B[31m", 
                                    maxRandom:Int = 100)

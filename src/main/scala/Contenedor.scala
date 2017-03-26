@@ -1,3 +1,5 @@
+package main.scala
+
 import scala.collection.mutable.ArrayBuffer
 //Semaforo de java
 import java.util.concurrent.Semaphore;

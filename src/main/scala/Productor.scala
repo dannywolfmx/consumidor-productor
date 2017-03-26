@@ -1,3 +1,5 @@
+package main.scala
+
 //Singleton de productor
 object Productor extends Persona("Productor"){
     def colocar(contenedor:Contenedor, producto:Any):Unit = {
